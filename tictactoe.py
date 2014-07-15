@@ -1,3 +1,5 @@
+from minmax_ai import AI, print_board
+
 blank = "-"
 
 # an implementation for tictactoe AI using minmax and alphabeta pruning
@@ -6,15 +8,8 @@ blank = "-"
 # boards are always squares
 def make_board(width):
     return [[blank] * width for _ in xrange(width)]
-        
-# board is a list of columns and we want to print by row
-def print_board(board):
-    print
-    for i in xrange(len(board)):
-        row = [board[j][i] for j in xrange(len(board))]
-        print " | ".join(row)
-      
-def possible_moves(board):  
+              
+def possible_moves(board, curr):  
     d = len(board)
     return [(y,x) for y in xrange(d) for x in xrange(d) if board[y][x] == blank]
 
@@ -75,7 +70,6 @@ def repl():
     player = "X"
     opp = "O"
 
-    from minmax_ai import AI
     ai = AI(ai_piece=opp,
             opp=player,
             depth=9,

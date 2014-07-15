@@ -1,3 +1,5 @@
+from minmax_ai import AI
+
 blank = "-"
 
 # general list util
@@ -25,7 +27,7 @@ def print_board(board):
         print " ".join(row)
     print " ".join(map(str, range(num_cols)))
         
-def possible_moves(board):
+def possible_moves(board, curr):
     moves = []
     for i, col in enumerate(board):
         if blank in col:
@@ -122,7 +124,6 @@ def repl():
     player = "X"
     opp = "O"
 
-    from minmax_ai import AI
     ai = AI(ai_piece=opp,
             opp=player,
             depth=5,
