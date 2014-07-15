@@ -2,6 +2,17 @@ from minmax_ai import AI
 
 blank = "-"
 
+GREEN = '\033[92m'
+RED = '\033[91m'
+ENDC = '\033[0m'
+
+def color_str(x):
+    if x == "X":
+        return GREEN + str(x) + ENDC 
+    elif x == "O":
+        return RED + str(x) + ENDC 
+    return str(x)
+
 # general list util
 def lastIndexOf(num, list, last_idx=-1, curr_idx=0):
     if list == []:
@@ -23,7 +34,7 @@ def print_board(board):
     num_cols, num_rows = len(board), len(board[0])
     for i in range(num_rows):
         row = [board[j][i] for j in range(num_cols)]
-        row = map(str, row)
+        row = map(color_str, row)
         print " ".join(row)
     print " ".join(map(str, range(num_cols)))
         
