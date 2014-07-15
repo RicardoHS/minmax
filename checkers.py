@@ -68,6 +68,8 @@ def print_board(board):
     board[GHOST_C][GHOST_R] = BLANK
     
 
+# TODO: bug: K forced to jump X ??
+# bug: Q wasn't forced to jump X??
 # assumes that white pieces move forward from top to bottom (low to hi index)
 # and black pieces move from bottom to top (high to low)
 # returns a list of tuple (dc,dr) where dc dr are the deltas to get to the cell
@@ -78,17 +80,21 @@ def jump_moves(board, piece, i, j):
     num_cols, num_rows = len(board), len(board[0])
     white_forward = [(+1, +1), (-1, +1)]
     black_forward = [(+1, -1), (-1, -1)]
+    both = [(+1, +1), (-1, +1), (+1, -1), (-1, -1)]
     
     neighbors = { PLAYER      : black_forward,
                   OPP         : white_forward,
-                  PLAYER_KING : black_forward.extend(white_forward),
-                  OPP_KING    : black_forward.extend(white_forward)
+                  PLAYER_KING : both,
+                  OPP_KING    : both
     }
     
     adj_deltas = neighbors[piece]
-    
+
     # list of jumpable pieces
-    jumpable = [OPP, OPP_KING] if piece == PLAYER else [PLAYER, PLAYER_KING]
+    if piece == PLAYER or piece == PLAYER_KING:
+        jumpable = [OPP, OPP_KING] 
+    else:
+        jumpable = [PLAYER, PLAYER_KING]
     
     # to return
     moves = []
@@ -107,11 +113,12 @@ def move_moves(board, piece, i, j):
     num_cols, num_rows = len(board), len(board[0])
     white_forward = [(+1, +1), (-1, +1)]
     black_forward = [(+1, -1), (-1, -1)]
-    
+    both = [(+1, +1), (-1, +1), (+1, -1), (-1, -1)]
+
     neighbors = { PLAYER      : black_forward,
                   OPP         : white_forward,
-                  PLAYER_KING : black_forward.extend(white_forward),
-                  OPP_KING    : black_forward.extend(white_forward)
+                  PLAYER_KING : both,
+                  OPP_KING    : both
     }
     
     adj_deltas = neighbors[piece]
@@ -128,15 +135,19 @@ def move_moves(board, piece, i, j):
     return moves
 
 # a move is a 4-tuple (col, row, col_delta, row_delta)
-def possible_moves(board, curr):  
+def possible_moves(board, piece):  
+    if piece == PLAYER or piece == PLAYER_KING:
+        mine = [PLAYER, PLAYER_KING]
+    else:
+        mine = [OPP, OPP_KING]
+
     jumps = []
     moves = []
 
-    # TODO cell == curr doesn't take into account kings
     make_move = lambda (dc, dr): (i, j, dc, dr)
     for i, col in enumerate(board):
         for j, cell in enumerate(col):
-            if cell == curr:
+            if cell in mine:
                 jump_deltas = jump_moves(board, cell, i, j)
                 jumps.extend(map(make_move, jump_deltas))
                 move_deltas = move_moves(board, cell, i, j)
@@ -165,8 +176,10 @@ def next_state(old, curr, move):
 # isn't copied multiple times
 def next_state_helper(old, curr, (f_c, f_r, dc, dr)):
     t_c, t_r = f_c + dc, f_r + dr
+    curr = old[f_c][f_r]
     old[f_c][f_r] = BLANK
     
+    print curr
     # normal move
     if old[t_c][t_r] == BLANK:
         old[t_c][t_r] = curr
@@ -174,44 +187,51 @@ def next_state_helper(old, curr, (f_c, f_r, dc, dr)):
         # king me
         if t_r == 0 and curr == PLAYER:
             old[t_c][t_r] = PLAYER_KING
-        if t_r == len(old[0]) and curr == OPP:
+        if t_r == len(old[0]) - 1 and curr == OPP:
             old[t_c][t_r] = OPP_KING
         return old
+    else:
+        # jump
+        old[t_c][t_r] = BLANK # "eat" the opponenets piece
+        t_c, t_r = f_c + dc*2, f_r + dr*2
+        old[t_c][t_r] = curr # move player to square after the jump
     
-    # jump
-    old[t_c][t_r] = BLANK # "eat" the opponenets piece
-    t_c, t_r = f_c + dc*2, f_r + dr*2
-    old[t_c][t_r] = curr # move player to square after the jump
-    
-    # king me
-    if t_r == 0 and curr == PLAYER:
-        old[t_c][t_r] = PLAYER_KING
-    if t_r == len(old[0]) and curr == OPP:
-        old[t_c][t_r] = OPP_KING
+        # king me
+        if t_r == 0 and curr == PLAYER:
+            old[t_c][t_r] = PLAYER_KING
+        if t_r == len(old[0]) - 1 and curr == OPP:
+            old[t_c][t_r] = OPP_KING
 
-    # check if another jump is possible from the new position (chained jumps)
-    jump_deltas = jump_moves(old, curr, t_c, t_r)
+        # check if another jump is possible from the new position (chained jumps)
+        jump_deltas = jump_moves(old, curr, t_c, t_r)
     
-    # TODO: what if there is more than one option to chain-jump?
-    # ^ looks like chain jumping needs to be done in possible_moves :(
-    if len(jump_deltas) != 0:
-        # temp: just take the first chain-jump
-        new_dc, new_dr = jump_deltas[0]
-        return next_state_helper(old, curr, (t_c, t_r, new_dc, new_dr))
-    return old
+        # TODO: what if there is more than one option to chain-jump?
+        # ^ looks like chain jumping needs to be done in possible_moves :(
+        if len(jump_deltas) != 0:
+            # temp: just take the first chain-jump
+            new_dc, new_dr = jump_deltas[0]
+            return next_state_helper(old, curr, (t_c, t_r, new_dc, new_dr))
+        return old
 
 def get_winner(board):
     # at most there are three types of pieces, player1, player2, and the blank 
     all_cells = set([piece for col in board for piece in col])
-    
-    if len(all_cells) != 2:
-        # no winner
-        return None
-        
-    # the two elements are the blank and the winner
     all_cells.remove(BLANK)
-    return all_cells.pop()
-
+    
+    in_player, in_opp = False, False
+    
+    for elem in all_cells:
+        if not in_player:
+            in_player = elem in [PLAYER, PLAYER_KING]
+        if not in_opp:
+            in_opp = elem in [OPP, OPP_KING]
+        
+    if in_player and in_opp:
+        return None
+    if in_player:
+        return PLAYER
+    return OPP
+    
 def game_over(board, player, opp):
     if get_winner(board) is not None:
         return True
@@ -253,13 +273,14 @@ def repl():
         print
         print "Your Turn: "
         print_board(board)
+        print possible_moves(board, PLAYER)
         input = raw_input()
         f_c, f_r, t_c, t_r = map(int, input.split())
       
         if not is_valid_move(board, PLAYER, f_c, f_r, t_c, t_r):
             print "Invalid move!"
             continue        
-    
+        
         board = next_state(board, PLAYER, (f_c, f_r, t_c- f_c, t_r - f_r))
 
         winner = get_winner(board)
