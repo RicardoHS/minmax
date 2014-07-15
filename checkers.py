@@ -179,7 +179,6 @@ def next_state_helper(old, curr, (f_c, f_r, dc, dr)):
     curr = old[f_c][f_r]
     old[f_c][f_r] = BLANK
     
-    print curr
     # normal move
     if old[t_c][t_r] == BLANK:
         old[t_c][t_r] = curr
@@ -257,7 +256,7 @@ def repl():
     from minmax_ai import AI
     ai = AI(ai_piece=OPP,
             opp=PLAYER,
-            depth=3,
+            depth=5,
             game_over_fun=game_over,
             eval_fun=evaluate,
             moves_fun=possible_moves,
