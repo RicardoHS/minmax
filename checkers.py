@@ -13,6 +13,24 @@ OPP = "O"
 PLAYER_KING = "K"
 OPP_KING = "Q"
 
+GHOST_PLAYER = "GX"
+GHOST_OPP = "GO"
+GHOST_C, GHOST_R = 7, 0
+
+# colors
+GREEN = '\033[92m'
+RED = '\033[91m'
+ENDC = '\033[0m'
+
+def color_str(x):
+    if x == PLAYER or x == PLAYER_KING:
+        return GREEN + str(x) + ENDC + "   "
+    if x == GHOST_PLAYER:
+        return str(PLAYER) + "   "
+    if x == GHOST_OPP:
+        return str(OPP) + "   "
+    return RED + str(x) + ENDC + "   "
+
 # an implementation for tictactoe AI using minmax and alphabeta pruning
 # board array access is board[col][row]
 
@@ -33,18 +51,21 @@ def make_board(width=8, black="X", white="O"):
     # zip makes tuples so we re-list-ify the cols
     return map(list, zip(*board))
 
+# TODO: draw a ghost where the piece moved from
 def print_board(board):
+    global GHOST_C, GHOST_R
     border = ["----"] * len(board)
     print
     for i in xrange(len(board[0])):
         print " | ".join(border)
         row = [board[j][i] for j in xrange(len(board))]
-        row = map(lambda x: str(x) + "   ", row)
+        row = map(lambda x: color_str(x), row)
         print " | ".join(row)
         n = [(j,i) for j in xrange(len(board))]
-        n = map(lambda (y,x): "  " + str(y) + str(x) if y%2 == x%2 else "    ", n)
+        n = map(lambda (y,x): " " + str(y) + " " + str(x) if y%2 == x%2 else "    ", n)
         print " | ".join(n)
     print " | ".join(border)
+    board[GHOST_C][GHOST_R] = BLANK
     
 
 # assumes that white pieces move forward from top to bottom (low to hi index)
@@ -111,6 +132,7 @@ def possible_moves(board, curr):
     jumps = []
     moves = []
 
+    # TODO cell == curr doesn't take into account kings
     make_move = lambda (dc, dr): (i, j, dc, dr)
     for i, col in enumerate(board):
         for j, cell in enumerate(col):
@@ -126,23 +148,9 @@ def possible_moves(board, curr):
     return moves
                 
 def is_valid_move(board, curr, f_c, f_r, t_c, t_r):
-    # opp = OPP if curr == PLAYER else PLAYER
-    # c_diff = t_c - f_c
-    # r_diff = t_r - f_r
-
-    # if board[f_c][f_r] == curr and board[t_c][t_r] == BLANK:
-    #     # normal move
-    #     if abs(c_diff) == 1 and abs(r_diff) == 1:
-    #         return True
-    #     elif abs(c_diff) == 2 and abs(r_diff) == 2:
-    #         return board[f_c + c_diff / 2][f_r + r_diff / 2] == opp
-        
-    # return False
     pm = possible_moves(board, curr)
     pm = map(lambda (fc, fr, dc, dr): (fc, fr, fc + dc, fr + dr), pm)
-    
     pm = filter(lambda move: move == (f_c, f_r, t_c, t_r), pm)
-    
     return len(pm) != 0
 
 # moves the piece at (f_c, f_r) to (t_c, t_r)
@@ -223,11 +231,8 @@ def evaluate(board, you, opp):
 # TODO
 # doesn't do any error handling of bad input
 def repl():
+    global GHOST_C, GHOST_R
     board = make_board()
-    # print board
-    # board[1][4] = "X"
-    # board[2][3] = "O"
-    # board[4][1] = "O"
 
     from minmax_ai import AI
     ai = AI(ai_piece=OPP,
@@ -241,6 +246,8 @@ def repl():
     print "You are X"
     print "The numbers at the bottom-right corner of cells is the col-row number. Seperate the digits when entering you move"
     print "Enter your moves as: from_col from_row to_col to_row"
+    print "NOTE: When jumping a piece, enter the from col-row and the col-row of the FIRST PIECE to jump, NOT the space after it. Chain jumps will automaticlaly be performed for you"
+    print "Your pieces are in GREEN, your opponenets are RED, and the ghost of where you opponent was is in WHITE"
 
     while(True):
         print
@@ -254,7 +261,7 @@ def repl():
             continue        
     
         board = next_state(board, PLAYER, (f_c, f_r, t_c- f_c, t_r - f_r))
-        print_board(board)
+
         winner = get_winner(board)
         if game_over(board, PLAYER, OPP):
             if winner != None:
@@ -270,9 +277,12 @@ def repl():
         print "Their turn..."
     
         score, ai_move = ai.get_move(board)
-        print ai_move
         board = next_state(board, OPP, ai_move)
-        print_board(board)
+        ai_fc, ai_fr, ai_dc, ai_dr = ai_move
+        GHOST_C, GHOST_R = ai_fc, ai_fr
+        board[GHOST_C][GHOST_R] = GHOST_OPP
+        print str((ai_fc, ai_fr)) + " -> " + str((ai_fc + ai_dc, ai_fr + ai_dr))
+
         winner = get_winner(board)    
         if game_over(board, PLAYER, OPP):
             if winner != None:
