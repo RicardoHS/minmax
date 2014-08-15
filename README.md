@@ -4,7 +4,7 @@ A minmax search with alpha-beta pruning "library". Comes with TicTacToe, Connect
 
 How to Use
 ===
-Import `minmax_ai` and create an `AI` instance:
+Import `minmax_ai` and create an `AI` instance. WHen you want a move, call `get_move` with the current state.
 
 ```
 import minmax_ai
@@ -21,6 +21,8 @@ ai = minmax_ai.AI(ai_piece=opp,
                   eval_fun=evaluate,
                   moves_fun=possible_moves,
                   next_state_fun=next_state)
+
+move = ai.get_move(current_state)
 ```
 
 - `ai_piece` : However you represent the AI
