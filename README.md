@@ -36,11 +36,11 @@ move = ai.get_move(current_state)
 Contract for the four functions (Haskell-style):  
 `game_over_fun :: board -> player -> opponent -> boolean`    
 `eval_fun :: board -> player -> opponent -> number`    
-
-# it doesn't matter what type of thing move is but it must be same thing  
-# that next_state_fun accepts  
 `moves_fun :: board -> player -> [move]`  
-`next_state_fun :: board -> player -> move -> board`  
+`next_state_fun :: board -> player -> move -> board`    
+
+It doesn't matter what type of thing move is but it must be same thing that next_state_fun accepts.
+
 
 Preview
 ===
