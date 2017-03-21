@@ -86,10 +86,17 @@ def repl():
         print "Your Turn: "
         print_board(board)
         input = raw_input()
-        y, x = map(int, input.split())
-        if board[y][x] != blank:
-            print "Invalid move!"
-            continue        
+        try:
+            y, x = map(int, input.split())
+            if board[y][x] != blank:
+                print "Invalid move!"
+                continue
+        except ValueError :
+            print "Invalid move! Must be two cordinates."
+            continue
+        except IndexError:
+            print "Invalid move! Out of board cordinates."
+            continue
     
         board = next_state(board, player, (y,x))
         print_board(board)
@@ -121,6 +128,7 @@ def repl():
             else:
                 print "Draw!"
             break
+
 
 if __name__ == "__main__":
     repl()
