@@ -1,4 +1,6 @@
 from minmax_ai import AI, print_board
+from random import randint
+import sys
 
 blank = "-"
 PAWN_PLAYER = "X"
@@ -9,8 +11,7 @@ def make_board(width):
     return [[blank] * width for _ in xrange(width)]
               
 def possible_moves(board, curr):  
-    print [(0,y) for y in xrange(len(board))]
-    return [(0,y) for y in xrange(len(board))]
+    return [(0,y) for y in reversed(xrange(len(board)))]
 
 def moveXr(board, col, current,old_piece):
     if len(board) != (current+1) :
@@ -52,6 +53,8 @@ def next_state(old, player, (col,row)):
     else :
         new = moveY(old,row)
         new[0][row] = player
+    
+    #print_board(new)
 
     return new
 
@@ -164,11 +167,20 @@ def game_over(board, player, opp):
 # and 0 otherwise (tie, or game not over)
 def evaluate(board, you, _):
     vW, hW, draw = get_winner(board)
+    if you == PAWN_PLAYER :
+        if vW :
+            return 10 
+        if hW :
+            return -10
+
+    if you == PAWN_IA :
+        if vW :
+            return -10 
+        if hW :
+            return 10
     
-    if you == PAWN_PLAYER:
-        return 10 if vW else -10
-    else:
-        return 10 if hW else -10
+    return randint(-3,3)
+
                 
 
 # doesn't do any error handling of bad input
@@ -184,18 +196,22 @@ def repl():
             eval_fun=evaluate,
             moves_fun=possible_moves,
             next_state_fun=next_state)
+
+    turn = 0
+    
+    board = next_state(board, player, (0,0))
+    print_board(board)
     
     print "You are X"
-    print "Enter your move"
-
+    
     while(True):
         print
         print "Your Turn: "
-        print_board(board)
         #input = raw_input()
         try:
             y = 0
-            x = int(raw_input()) 
+            x = int(raw_input())
+            playerLastMove = x
             if x > 4 or x < 0:
                 print "Invalid move! Must be a number between 0-4." 
                 continue
@@ -209,7 +225,6 @@ def repl():
         board = next_state(board, player, (x,y))
         print_board(board)
         vW,hW,draw = get_winner(board)    
-        print vW, hW, draw
         if game_over(board, player, opp):
             if vW :
                 print "The real player win!"
@@ -219,12 +234,17 @@ def repl():
                 print "Draw!"
             break
         print 
-        print "Their turn..."
         
         #IA controls
-        #score, ai_move = ai.get_move(board)
-        #print ai_move
-        #board = next_state(board, opp, ai_move)
+        sys.stdout.write('The IA is thinking and the move is ')
+        sys.stdout.flush()
+        if turn == 0 :
+            print "(0, "+str(4)+")"
+            board = next_state(board, opp , (0,4))
+        else:
+            score, ai_move = ai.get_move(board)
+            print ai_move
+            board = next_state(board, opp, ai_move)
         #End IA controls
 
         #Player2 controls
@@ -249,7 +269,6 @@ def repl():
 
         print_board(board)
         vW,hW,draw = get_winner(board)    
-        print vW, hW, draw
         if game_over(board, player, opp):
             if hW :
                 print "The IA win!"
@@ -258,6 +277,8 @@ def repl():
             else:
                 print "Draw!"
             break
+
+        turn = turn + 1
 
 
 if __name__ == "__main__":
