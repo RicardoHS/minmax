@@ -9,11 +9,8 @@ def make_board(width):
     return [[blank] * width for _ in xrange(width)]
               
 def possible_moves(board, curr):  
-    #if curr == PAWN_PLAYER:
-    #    return [(x,0) for x in xrange(len(board))]
-    #else :
-        print [(0,y) for y in xrange(len(board))]
-        return [(0,y) for y in xrange(len(board))]
+    print [(0,y) for y in xrange(len(board))]
+    return [(0,y) for y in xrange(len(board))]
 
 def moveXr(board, col, current,old_piece):
     if len(board) != (current+1) :
@@ -60,13 +57,13 @@ def next_state(old, player, (col,row)):
 
 def checkNeighborXnodes(board, x, y):
     if x > 0 and x < (len(board)-1):
-        if (board[x-1][y] or board[x][y] or board[x+1][y]) == PAWN_PLAYER :
+        if board[x-1][y]  == PAWN_PLAYER or board[x][y] == PAWN_PLAYER or board[x+1][y] == PAWN_PLAYER  :
             return True
     elif x == 0:
-        if (board[x][y] or board[x+1][y]) == PAWN_PLAYER :
+        if board[x][y] == PAWN_PLAYER  or board[x+1][y] == PAWN_PLAYER :
             return True
     else : #x == len(board)-1
-        if (board[x-1][y] or board[x][y]) == PAWN_PLAYER :
+        if board[x-1][y] == PAWN_PLAYER  or board[x][y] == PAWN_PLAYER :
             return True
     return False
 
@@ -98,13 +95,13 @@ def checkPathXr(board, x, y):
 
 def checkNeighborYnodes(board, x, y):
     if y > 0 and y < (len(board)-1):
-        if (board[x][y-1] or board[x][y] or board[x][y+1]) == PAWN_IA :
+        if board[x][y-1]== PAWN_IA or board[x][y]== PAWN_IA or board[x][y+1] == PAWN_IA :
             return True
     elif y == 0:
-        if (board[x][y] or board[x][y+1]) == PAWN_IA :
+        if board[x][y]== PAWN_IA or board[x][y+1] == PAWN_IA :
             return True
     else : #y == len(board)-1
-        if (board[x][y-1] or board[x][y]) == PAWN_IA :
+        if board[x][y-1]== PAWN_IA or board[x][y] == PAWN_IA :
             return True
     return False
 
@@ -211,13 +208,13 @@ def repl():
     
         board = next_state(board, player, (x,y))
         print_board(board)
-        winner = get_winner(board)
+        vW,hW,draw = get_winner(board)    
+        print vW, hW, draw
         if game_over(board, player, opp):
-            if winner != None:
-                if winner == player:
-                    print "You win!"
-                else:
-                    print "You lose!"
+            if vW :
+                print "The real player win!"
+            elif hW:
+                print "The IA win!"
             else:
                 print "Draw!"
             break
@@ -231,7 +228,7 @@ def repl():
         #End IA controls
 
         #Player2 controls
-        #'''
+        '''
         while True:
             try:
                 y = int(raw_input())
@@ -251,13 +248,13 @@ def repl():
         #End player2 controls
 
         print_board(board)
-        winner = get_winner(board)    
+        vW,hW,draw = get_winner(board)    
+        print vW, hW, draw
         if game_over(board, player, opp):
-            if winner != None:
-                if winner == player:
-                    print "You win!"
-                else:
-                    print "You lose!"
+            if hW :
+                print "The IA win!"
+            elif vW:
+                print "The real player win!"
             else:
                 print "Draw!"
             break
